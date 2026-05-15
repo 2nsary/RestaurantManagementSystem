@@ -140,8 +140,8 @@ public class SearchOrdersController implements Initializable {
 				order.comments.set(resultSet.getString("comments"));
 				order.itemsOrdered.set(getItems(resultSet.getInt("orderid")));
 				String total = resultSet.getString("total");
-				if (total.contains("£")) {
-					total = total.substring(total.indexOf("£") + 1);
+				if (total.contains("")) {
+					total = total.substring(total.indexOf("") + 1);
 				}
 				BigDecimal totalCost = new BigDecimal(total);
 				order.totalCost.set(NumberFormat.getCurrencyInstance().format(totalCost));

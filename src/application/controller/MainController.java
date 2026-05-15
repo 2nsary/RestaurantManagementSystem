@@ -43,54 +43,54 @@ import javafx.stage.WindowEvent;
  *
  */
 public class MainController implements Initializable {
-	
+
 	// the table number of the selected order
 	protected static String tableNumber;
 	// the total of the selected order - for payment
 	protected static String total;
-	
+
 	private ObservableList<Order> currentOrders = FXCollections.observableArrayList();
-	
+
 	@FXML
 	private Label lblEmployee;
-	
+
 	@FXML
 	private TableView<Order> tblCurrentOrders;
-	
+
 	@FXML
-    private TableColumn<Order, Integer> colOrderID;
-	
+	private TableColumn<Order, Integer> colOrderID;
+
 	@FXML
-    private TableColumn<Order, Integer> colTable;
-	
+	private TableColumn<Order, Integer> colTable;
+
 	@FXML
-    private TableColumn<Order, String> colTime;
-	
+	private TableColumn<Order, String> colTime;
+
 	@FXML
-    private TableColumn<Order, String> colCreatedBy;
-	
+	private TableColumn<Order, String> colCreatedBy;
+
 	@FXML
-    private TableColumn<Order, String> colTotal;
-	
-	
+	private TableColumn<Order, String> colTotal;
+
+
 	/**
 	 * Initialise the values in the table of current orders.
-	 * 
+	 *
 	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		
+
 		colOrderID.setCellValueFactory(
-		        new PropertyValueFactory<Order,Integer>("orderID"));
+				new PropertyValueFactory<Order,Integer>("orderID"));
 		colTable.setCellValueFactory(
-		        new PropertyValueFactory<Order,Integer>("tableNumber"));		
+				new PropertyValueFactory<Order,Integer>("tableNumber"));
 		colTime.setCellValueFactory(
-		        new PropertyValueFactory<Order,String>("timeCreated"));
+				new PropertyValueFactory<Order,String>("timeCreated"));
 		colCreatedBy.setCellValueFactory(
-		        new PropertyValueFactory<Order,String>("employee"));
+				new PropertyValueFactory<Order,String>("employee"));
 		colTotal.setCellValueFactory(
-		        new PropertyValueFactory<Order,String>("totalCost"));
-		
+				new PropertyValueFactory<Order,String>("totalCost"));
+
 		// connect to database
 		Connection connection = SQLiteConnection.Connector();
 		try {
@@ -104,14 +104,16 @@ public class MainController implements Initializable {
 				order.tableNumber.set(resultSet.getInt("tablenumber"));
 				order.orderID.set(resultSet.getInt("orderid"));
 				order.timeCreated.set(resultSet.getString("time"));
-				order.employee.set(resultSet.getString("firstname") + " " + resultSet.getString("lastname"));				
+				order.employee.set(resultSet.getString("firstname") + " " + resultSet.getString("lastname"));
 				total = resultSet.getString("total");
 				if (total.contains("£")) {
 					total = total.substring(total.indexOf("£") + 1);
 				}
-				BigDecimal totalCost = new BigDecimal(total);
+				String cleanedTotal = total.replaceAll("[^\\d.]", ""); // removes everything except digits and dot
+				BigDecimal totalCost = new BigDecimal(cleanedTotal);
 				order.totalCost.set(NumberFormat.getCurrencyInstance().format(totalCost));
 				currentOrders.add(order);
+
 			}
 			tblCurrentOrders.setItems(currentOrders);
 		} catch(SQLException e) {
@@ -122,18 +124,18 @@ public class MainController implements Initializable {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}				
-		
+		}
+
 		// add name to welcome label
 		lblEmployee.setText("Welcome " + LoginController.employee);
 	}
-	
+
 	/**
 	 * Signs out of the application and shows the login screen.
 	 * @param event
 	 */
 	public void signOut(ActionEvent event) {
-		((Node)event.getSource()).getScene().getWindow().hide();	
+		((Node)event.getSource()).getScene().getWindow().hide();
 		try {
 			Stage primaryStage = new Stage();
 			Parent root = FXMLLoader.load(getClass().getResource("../Login.fxml"));
@@ -145,9 +147,9 @@ public class MainController implements Initializable {
 			Log.addToEmployeeLog("logged out.");
 		} catch (IOException e) {
 			e.printStackTrace();
-		}		
+		}
 	}
-	
+
 	/**
 	 * Checks if there is a current order for a table.
 	 * @param event
@@ -161,7 +163,7 @@ public class MainController implements Initializable {
 		tableNumber = table.substring(5);
 		String query = "select * from orders where tablenumber = ? and current = 1";
 		// check no current order on database
-		try {			
+		try {
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, tableNumber);
 			resultSet = preparedStatement.executeQuery();
@@ -186,7 +188,7 @@ public class MainController implements Initializable {
 			}
 		}
 	}
-	
+
 	/**
 	 * If there is a current order, the order is opened. If there is no current order, a new order is created.
 	 * @param event
@@ -202,7 +204,7 @@ public class MainController implements Initializable {
 				scene.getStylesheets().add(getClass().getResource("../application.css").toExternalForm());
 				primaryStage.setScene(scene);
 				primaryStage.show();
-				primaryStage.setTitle("Order");				
+				primaryStage.setTitle("Order");
 				Log.addToEmployeeLog("opened order " + getOrderID() + ".");
 			}
 			catch(IOException e) {
@@ -239,11 +241,11 @@ public class MainController implements Initializable {
 					Log.addToEmployeeLog("closed order " + getOrderID() + ".");
 				} catch (IOException e) {
 					e.printStackTrace();
-				}						
-			}			
+				}
+			}
 		});
 	}
-	
+
 	/**
 	 * Gets the orderID of the selected order from the database.
 	 * @return The orderID of the selected order.
@@ -260,7 +262,7 @@ public class MainController implements Initializable {
 			preparedStatement.setString(1, tableNumber);
 			resultSet = preparedStatement.executeQuery();
 			while(resultSet.next()) {
-				orderNumber = resultSet.getInt("orderid");				
+				orderNumber = resultSet.getInt("orderid");
 			}
 		} catch(SQLException e) {
 			e.printStackTrace();
@@ -268,14 +270,14 @@ public class MainController implements Initializable {
 			try {
 				preparedStatement.close();
 				resultSet.close();
-				connection.close();			
+				connection.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
 		return orderNumber;
 	}
-	
+
 	/**
 	 * Opens the selected current order so it can be edited.
 	 * @param event
@@ -310,11 +312,11 @@ public class MainController implements Initializable {
 							scene.getStylesheets().add(getClass().getResource("../application.css").toExternalForm());
 							primaryStage.setScene(scene);
 							primaryStage.show();
-							primaryStage.setTitle("Main");	
+							primaryStage.setTitle("Main");
 						} catch (IOException e) {
 							e.printStackTrace();
-						}						
-					}			
+						}
+					}
 				});
 			}
 			catch(IOException e) {
@@ -330,7 +332,7 @@ public class MainController implements Initializable {
 			alert.showAndWait();
 		}
 	}
-	
+
 	/**
 	 * Asks for confirmation to delete an order. If OK is clicked then the order is deleted from the records.
 	 * @param event
@@ -346,7 +348,7 @@ public class MainController implements Initializable {
 				delete();
 			} else {
 				alert.close();
-			}	
+			}
 		}
 		else {
 			Alert alert = new Alert(AlertType.WARNING);
@@ -366,7 +368,7 @@ public class MainController implements Initializable {
 		Connection connection = SQLiteConnection.Connector();
 		PreparedStatement preparedStatement = null;
 		PreparedStatement preparedStatement2 = null;
-		try {	
+		try {
 			String query = "delete from orders where orderid = ?";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setInt(1, orderID);
@@ -381,15 +383,15 @@ public class MainController implements Initializable {
 			e.printStackTrace();
 		}
 		finally {
-			try {				
+			try {
 				preparedStatement.close();
 				connection.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}		
+		}
 	}
-	
+
 	/**
 	 * Opens a new window where all the orders can be viewed and searched.
 	 * @param event
@@ -409,7 +411,7 @@ public class MainController implements Initializable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Displays the different payment options using an alert box with multiple buttons (source: http://code.makery.ch/blog/javafx-dialogs-official/). 
 	 * If payment is to be made by cash a change calculator is opened.
@@ -425,8 +427,8 @@ public class MainController implements Initializable {
 			alert.setContentText("Please choose a payment option");
 			// add buttons to the alert
 			ButtonType btnCash = new ButtonType("Cash");
-			ButtonType btnDebit = new ButtonType("Debit card");	
-			ButtonType btnCredit = new ButtonType("Credit card");		
+			ButtonType btnDebit = new ButtonType("Debit card");
+			ButtonType btnCredit = new ButtonType("Credit card");
 			ButtonType btnCancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
 			alert.getButtonTypes().setAll(btnCash, btnDebit, btnCredit, btnCancel);
 			Optional<ButtonType> result = alert.showAndWait();
@@ -449,8 +451,8 @@ public class MainController implements Initializable {
 								removeCurrentOrder(orderID);
 								tblCurrentOrders.getItems().remove(selected);
 								CalculatorController.isPaid = false;
-							}													
-						}			
+							}
+						}
 					});
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -474,15 +476,15 @@ public class MainController implements Initializable {
 			alert.showAndWait();
 		}
 	}
-	
+
 	/**
 	 * Changes the selected order from being a current order to being an old order.
 	 * @param orderID The orderID of the selected order.
 	 */
-	private void removeCurrentOrder(int orderID) {	
+	private void removeCurrentOrder(int orderID) {
 		Connection connection = SQLiteConnection.Connector();
 		PreparedStatement preparedStatement = null;
-		try {	
+		try {
 			String query = "update orders set current = 0 where orderid = ?";
 			connection.setAutoCommit(false);
 			preparedStatement = connection.prepareStatement(query);
@@ -494,13 +496,13 @@ public class MainController implements Initializable {
 			e.printStackTrace();
 		}
 		finally {
-			try {				
+			try {
 				preparedStatement.close();
 				connection.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}		
+		}
 	}
 
 	/**
@@ -529,16 +531,19 @@ public class MainController implements Initializable {
 						scene.getStylesheets().add(getClass().getResource("../application.css").toExternalForm());
 						primaryStage.setScene(scene);
 						primaryStage.show();
-						primaryStage.setTitle("Main");	
+						primaryStage.setTitle("Main");
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}						
-				}			
+					}
+				}
 			});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+    private void bypassCyclicDependencies() {
+
+    }
 }

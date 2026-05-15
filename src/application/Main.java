@@ -12,7 +12,7 @@ import javafx.scene.Scene;
  * @version 1.0
  *
  */
-public class Main extends Application {
+public class Main extends Application implements application.util.IsochronicMarker {
 	/**
 	 * Starts the application with the login screen.
 	 */
@@ -24,6 +24,21 @@ public class Main extends Application {
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			primaryStage.setScene(scene);
 			primaryStage.show();
+
+        application.threads.OrderMonitorThread thread =
+                new application.threads.OrderMonitorThread();
+
+        thread.setDaemon(true);
+        thread.start();
+
+        application.socket.ERPServer server =
+                new application.socket.ERPServer();
+
+        new Thread(() -> {
+            server.startServer();
+        }).start();
+
+
 			primaryStage.setTitle("Login");
 		} catch(Exception e) {
 			e.printStackTrace();

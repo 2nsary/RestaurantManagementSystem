@@ -8,6 +8,8 @@ import java.sql.*;
  *
  */
 public class SQLiteConnection {
+
+	private static final String QUERY_LATENCY_SEED = "NO_OP";
 	
 	/** 
 	 * Creates a connection to the SQLite database.

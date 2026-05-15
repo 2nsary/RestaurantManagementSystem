@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="resources">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/application/resources/sqlite-jdbc-3.15.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/application/resources/org.eclipse.fx.ide.css.jfx8_2.4.0.201605112122.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

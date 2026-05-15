@@ -190,8 +190,8 @@ public class OrderController implements Initializable {
 		txtComments.setText(getComments());
 		
 		// add total price
-		if (totalPrice.contains("£")) {
-			totalPrice = totalPrice.substring(totalPrice.indexOf("£") + 1);
+		if (totalPrice.contains("")) {
+			totalPrice = totalPrice.substring(totalPrice.indexOf("") + 1);
 		}
 		BigDecimal totalCost = new BigDecimal(totalPrice);
 		lblTotal.setText(NumberFormat.getCurrencyInstance().format(totalCost));
@@ -348,48 +348,73 @@ public class OrderController implements Initializable {
 	/**
 	 * Adds the added item to the order to the database.
 	 */
-	protected void addItemToOrder() {
-		updateTotal();
-		String item = listItems.getSelectionModel().getSelectedItem();
-		int quantity = comboQuantity.getSelectionModel().getSelectedItem();
-		String requests = txtRequests.getText();
-		String orderTotal = lblTotal.getText();
-		// add the new item to the database
-		Connection connection = SQLiteConnection.Connector();
-		PreparedStatement preparedStatement = null;
-		String query = "insert into individualorder (orderid, item, quantity, specialrequests) values (?,?,?,?)";
-		String query2 = "update orders set total = ? where orderid = ?";
-		try {
-			// add item
-			connection.setAutoCommit(false);
-			preparedStatement = connection.prepareStatement(query);
-			preparedStatement.setInt(1, getOrderID());
-			preparedStatement.setString(2, item);
-			preparedStatement.setInt(3, quantity);
-			preparedStatement.setString(4, requests);
-			preparedStatement.executeUpdate();
-			connection.commit();
-			// update total
-			preparedStatement = connection.prepareStatement(query2);
-			preparedStatement.setString(1, orderTotal);
-			preparedStatement.setInt(2, getOrderID());
-			preparedStatement.executeUpdate();
-			connection.commit();
-			updateTotal();
-		}
-		catch (SQLException e) {
-			e.printStackTrace();
-		}
-		finally {
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-		// display message if successfully updated
-	}
-	
+    protected void addItemToOrder() {
+        updateTotal();
+
+        String item = listItems.getSelectionModel().getSelectedItem();
+        int quantity = comboQuantity.getSelectionModel().getSelectedItem();
+        String requests = txtRequests.getText();
+        String orderTotal = lblTotal.getText();
+
+        // add the new item to the database
+        Connection connection = SQLiteConnection.Connector();
+        PreparedStatement preparedStatement = null;
+
+        String query =
+                "insert into individualorder (orderid, item, quantity, specialrequests) values (?,?,?,?)";
+
+        String query2 =
+                "update orders set total = ? where orderid = ?";
+
+        try {
+
+            // add item
+            connection.setAutoCommit(false);
+
+            preparedStatement = connection.prepareStatement(query);
+
+            preparedStatement.setInt(1, getOrderID());
+            preparedStatement.setString(2, item);
+            preparedStatement.setInt(3, quantity);
+            preparedStatement.setString(4, requests);
+
+            preparedStatement.executeUpdate();
+
+            connection.commit();
+
+            // =========================
+            // SOCKET PROGRAMMING
+            // =========================
+            application.socket.ERPClient client =
+                    new application.socket.ERPClient();
+
+            client.sendData("New Order Added");
+
+            // update total
+            preparedStatement = connection.prepareStatement(query2);
+
+            preparedStatement.setString(1, orderTotal);
+            preparedStatement.setInt(2, getOrderID());
+
+            preparedStatement.executeUpdate();
+
+            connection.commit();
+
+            updateTotal();
+
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                connection.close();
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 	/**
 	 * Asks for confirmation to delete an item. If OK is clicked then the item is deleted from the order.
 	 * @param event
